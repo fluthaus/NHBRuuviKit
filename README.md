@@ -9,12 +9,34 @@ NHBRuuviKit requires iOS 9 or later and Xcode 9 or later. It's written in Object
 ## Usage
 
 NHBRuuviKit consists of two main classes:
-  * _RKRuuviScanner_ is a minimal wrapper around CoreBluetooth with just enough functionality to scan for the BLE advertisements from ruuvi tags. When a ruuvi advertisement is received, it is handed to the delegate as an instance of
- * _RKRuuviData_, which encapsulates the payload of the advertisement and allows access to the actual values (sensor readings, battery voltage etc.).
+  * `RKRuuviScanner` is a minimal wrapper around CoreBluetooth with just enough functionality to scan for the BLE advertisements from ruuvi tags. When a ruuvi advertisement is received, it is handed to the delegate as an instance of
+ * `RKRuuviData`, which encapsulates the payload of the advertisement and allows access to the actual values (sensor readings, battery voltage etc.).
+ 
+ Setting up scanning requires only a few steps. First, implement the scanning delegate method; doing this in the app delegate is usually a good starting point:
 
-If you prefer not to use _RKRuuviScanner_ and instead implement scanning yourself, _RKRuuviData_ has a class method which will examine an advertisement dictionary as provided by CoreBluetooth and, if it is a ruuvi advertisement, create a _RKRuuviData_ instance from it.
+```objc
+#import <NHBRuuviKit/NHBRuuviKit.h>
 
-NHBRuuviKit also exposes two supplemental NSData categories, giving access to company ids in BLE manufacturer data and the various payloads and fields in beacon advertisements following the [Eddystone protocol](https://github.com/google/eddystone/blob/master/protocol-specification.md).
+// delegate method that will be called when a ruuvi advertisement is received
+-(void)ruuviScanner:(RKRuuviScanner*)ruuviScanner didReceiveAdvertisementFromRuuviTag:(NSUUID*)coreBluetoothUUID ruuviData:(RKRuuviData*)ruuviData RSSI:(NSNumber*)RSSI
+{
+    // do something with ruuviData et al.
+}
+```
+
+Then, in an appropriate location, initialize a `RKRuuviScanner` with the delegate, and start scanning:
+
+```objc
+RKRuuviScanner* ruuviScanner = [[RKRuuviScanner alloc] initWithDelegate:self queue:nil options:nil];
+[ruuviScanner startScan];
+
+```
+
+See _NHBRuuviKitSample_ for a full implementation.
+
+If you prefer not to use `RKRuuviScanner` and instead implement scanning yourself, `RKRuuviData` has a class method which will examine an advertisement dictionary as provided by CoreBluetooth and, if it is a ruuvi advertisement, create a `RKRuuviData` instance from it.
+
+NHBRuuviKit also exposes two supplemental `NSData` categories, giving access to company ids in BLE manufacturer data and the various payloads and fields in beacon advertisements following the [Eddystone protocol](https://github.com/google/eddystone/blob/master/protocol-specification.md).
 
 ## NHBRuuviKitSample
 
@@ -36,6 +58,10 @@ Please see the comments in the source code on what classes and methods do and ho
 
 The CoreBluetooth-API imposes limitations on what apps can do with BLE beacons, especially when it comes to background scanning and identifying peripherals across devices. I've [documented](http://corebeacons.fluthaus.com/#known-limitations "CoreBeacons | Limitations") the limitations I'm aware of.  
 I can't do anything about this, so please don't ask; file a bug report/feature request with Apple instead.
+
+## CocoaPod
+
+The podspec contains the regular unit tests, but doesn't has the fuzzing tests (which usually have to run for hours to be useful). Please clone/download the repository directly and use the included Xcode project if you're interested in running these. 
 
 ## License
 
